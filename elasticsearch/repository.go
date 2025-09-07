@@ -9,8 +9,8 @@ import (
 
 	es "github.com/elastic/go-elasticsearch/v8"
 
-	appErrors "github.com/salamsites/elasticsearch-package/pkg/errors"
-	"github.com/salamsites/elasticsearch-package/pkg/types"
+	appErrors "github.com/Hajymuhammet/elasticsearch-package/pkg/errors"
+	"github.com/Hajymuhammet/elasticsearch-package/pkg/types"
 )
 
 // Repository implements repository.IndexRepository[T] using go-elasticsearch

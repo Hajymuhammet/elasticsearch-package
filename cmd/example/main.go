@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	esadapter "github.com/salamsites/elasticsearch-package/elasticsearch"
-	usecase "github.com/salamsites/elasticsearch-package/service"
+	esadapter "github.com/Hajymuhammet/elasticsearch-package/elasticsearch"
+	usecase "github.com/Hajymuhammet/elasticsearch-package/service"
 )
 
 type Stock struct {

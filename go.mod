@@ -1,4 +1,4 @@
-module github.com/salamsites/elasticsearch-package
+module github.com/Hajymuhammet/elasticsearch-package
 
 go 1.24.5
 

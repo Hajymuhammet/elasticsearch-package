@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/salamsites/elasticsearch-package/pkg/mapping"
-	"github.com/salamsites/elasticsearch-package/repository"
+	"github.com/Hajymuhammet/elasticsearch-package/pkg/mapping"
+	"github.com/Hajymuhammet/elasticsearch-package/repository"
 )
 
 // Service[T] is a generic Elasticsearch service wrapping repository operations.
