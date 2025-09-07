@@ -224,3 +224,47 @@ func (r *Repository[T]) Search(ctx context.Context, index string, query map[stri
 
 	return out, raw.Hits.Total.Value, nil
 }
+
+// GetByID retrieves a document by ID
+func (r *Repository[T]) GetByID(ctx context.Context, index, id string) (*T, error) {
+	res, err := r.client.Get(index, id, r.client.Get.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 404 {
+		return nil, appErrors.ErrDocumentNotFound
+	}
+	if res.StatusCode >= 300 {
+		b, _ := io.ReadAll(res.Body)
+		return nil, appErrors.WrapperElasticsearchError(res.StatusCode, "get by id failed", string(b))
+	}
+
+	var raw struct {
+		Source T `json:"_source"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	return &raw.Source, nil
+}
+
+// DeleteByID deletes a document by ID
+func (r *Repository[T]) DeleteByID(ctx context.Context, index, id string) error {
+	res, err := r.client.Delete(index, id, r.client.Delete.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 404 {
+		return appErrors.ErrDocumentNotFound
+	}
+	if res.StatusCode >= 300 {
+		b, _ := io.ReadAll(res.Body)
+		return appErrors.WrapperElasticsearchError(res.StatusCode, "delete by id failed", string(b))
+	}
+
+	return nil
+}
