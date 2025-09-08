@@ -1,21 +1,21 @@
+// querybuilder.go
 package querybuilder
 
 // QueryBuilder helps build Elasticsearch DSL queries in a fluent style.
-// QueryBuilder helps build Elasticsearch DSL queries in a fluent style.
 type QueryBuilder struct {
-	query map[string]any
+	Query map[string]any
 }
 
 // New creates a new QueryBuilder instance.
 func New() *QueryBuilder {
 	return &QueryBuilder{
-		query: make(map[string]any),
+		Query: make(map[string]any),
 	}
 }
 
 // MultiMatch adds a multi_match query across multiple fields.
 func (qb *QueryBuilder) MultiMatch(fields []string, value any) *QueryBuilder {
-	qb.query["multi_match"] = map[string]any{
+	qb.Query["multi_match"] = map[string]any{
 		"query":  value,
 		"fields": fields,
 	}
@@ -24,7 +24,7 @@ func (qb *QueryBuilder) MultiMatch(fields []string, value any) *QueryBuilder {
 
 // Match adds a match query for a given field.
 func (qb *QueryBuilder) Match(field string, value any) *QueryBuilder {
-	qb.query["match"] = map[string]any{
+	qb.Query["match"] = map[string]any{
 		field: map[string]any{
 			"query": value,
 		},
@@ -34,7 +34,7 @@ func (qb *QueryBuilder) Match(field string, value any) *QueryBuilder {
 
 // Term adds a term query for a given field (exact match).
 func (qb *QueryBuilder) Term(field string, value any) *QueryBuilder {
-	qb.query["term"] = map[string]any{
+	qb.Query["term"] = map[string]any{
 		field: value,
 	}
 	return qb
@@ -42,7 +42,7 @@ func (qb *QueryBuilder) Term(field string, value any) *QueryBuilder {
 
 // Range adds a range query for a given field.
 func (qb *QueryBuilder) Range(field string, opts map[string]any) *QueryBuilder {
-	qb.query["range"] = map[string]any{
+	qb.Query["range"] = map[string]any{
 		field: opts,
 	}
 	return qb
@@ -65,11 +65,11 @@ func (qb *QueryBuilder) Bool(must, should, mustNot, filter []map[string]any) *Qu
 		boolQuery["filter"] = filter
 	}
 
-	qb.query["bool"] = boolQuery
+	qb.Query["bool"] = boolQuery
 	return qb
 }
 
 // Build finalizes the query and returns the DSL object.
 func (qb *QueryBuilder) Build() map[string]any {
-	return qb.query
+	return qb.Query
 }
