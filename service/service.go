@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Hajymuhammet/elasticsearch-package/pkg/mapping"
 	"github.com/Hajymuhammet/elasticsearch-package/repository"
@@ -81,6 +82,10 @@ func (s *Service[T]) GetByID(ctx context.Context, index, id string) (*T, error) 
 }
 
 // BuildMapping generates an Elasticsearch mapping from a struct using reflection and tags
-func (s *Service[T]) BuildMapping(sample T) map[string]any {
-	return mapping.BuildMappingFromStruct(sample)
+func (s *Service[T]) BuildMapping(sample T) (map[string]any, error) {
+	m, err := mapping.BuildMappingFromStruct(sample)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build mapping: %w", err)
+	}
+	return m, nil
 }

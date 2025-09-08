@@ -1,88 +1,88 @@
 package mapping
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // BuildMappingFromStruct generates Elasticsearch index mapping from Go struct with JSON and ES tags.
 // It also adds default analyzers to handle multilingual search.
-func BuildMappingFromStruct(sample any) map[string]any {
-	properties := map[string]any{}
-	v := reflect.ValueOf(sample)
-
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
+func BuildMappingFromStruct[T any](sample T) (map[string]any, error) {
+	typ := reflect.TypeOf(sample)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
 	}
-	if v.Kind() != reflect.Struct {
-		return map[string]any{}
+	if typ.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("BuildMappingFromStruct: expected struct, got %s", typ.Kind())
 	}
 
-	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
-		f := t.Field(i)
-		if !f.IsExported() {
+	properties := make(map[string]any)
+
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
 			continue
 		}
+		jsonTag = strings.Split(jsonTag, ",")[0] // <- düzediş
+		esTag := field.Tag.Get("es")
 
-		// JSON field name
-		name := f.Tag.Get("json")
-		if name == "" {
-			name = f.Name
-		}
-		name = strings.Split(name, ",")[0]
+		esField := make(map[string]any)
 
-		// ES tags
-		esTag := f.Tag.Get("es")
-		prop := map[string]any{}
 		if esTag != "" {
-			parts := strings.Split(esTag, ",")
-			for _, p := range parts {
-				kv := strings.SplitN(p, "=", 2)
-				if len(kv) == 2 {
-					prop[kv[0]] = kv[1]
+			tags := strings.Split(esTag, ",")
+			for _, tag := range tags {
+				parts := strings.SplitN(tag, "=", 2)
+				key := strings.TrimSpace(parts[0])
+				if len(parts) == 2 {
+					esField[key] = strings.TrimSpace(parts[1])
 				} else {
-					prop[p] = true
+					esField[key] = true
 				}
 			}
 		}
 
-		// Default type detection if not provided
-		if _, ok := prop["type"]; !ok {
-			switch f.Type.Kind() {
+		if _, ok := esField["type"]; !ok {
+			switch field.Type.Kind() {
 			case reflect.String:
-				prop["type"] = "text"
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				prop["type"] = "long"
+				esField["type"] = "text"
+				esField["analyzer"] = "universal_analyzer"
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+				reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				esField["type"] = "long"
 			case reflect.Float32, reflect.Float64:
-				prop["type"] = "double"
+				esField["type"] = "float"
 			case reflect.Bool:
-				prop["type"] = "boolean"
-			default:
-				prop["type"] = "object"
+				esField["type"] = "boolean"
+			case reflect.Struct:
+				if field.Type == reflect.TypeOf(time.Time{}) {
+					esField["type"] = "date"
+				} else {
+					esField["type"] = "object"
+				}
 			}
 		}
 
-		properties[name] = prop
+		properties[jsonTag] = esField
 	}
 
-	// Add multilingual analyzer
-	analysis := map[string]any{
-		"analyzer": map[string]any{
-			"default": map[string]any{
-				"type":      "custom",
-				"tokenizer": "standard",
-				"filter":    []string{"lowercase", "asciifolding"},
-			},
-		},
-	}
-
-	return map[string]any{
+	mapping := map[string]any{
 		"settings": map[string]any{
-			"analysis": analysis,
+			"analysis": map[string]any{
+				"analyzer": map[string]any{
+					"universal_analyzer": map[string]any{
+						"tokenizer": "icu_tokenizer",
+						"filter":    []string{"icu_folding", "lowercase"},
+					},
+				},
+			},
 		},
 		"mappings": map[string]any{
 			"properties": properties,
 		},
 	}
+
+	return mapping, nil
 }
