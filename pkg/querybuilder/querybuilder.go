@@ -1,6 +1,7 @@
 package querybuilder
 
 // QueryBuilder helps build Elasticsearch DSL queries in a fluent style.
+// QueryBuilder helps build Elasticsearch DSL queries in a fluent style.
 type QueryBuilder struct {
 	query map[string]any
 }
@@ -49,7 +50,7 @@ func (qb *QueryBuilder) Range(field string, opts map[string]any) *QueryBuilder {
 
 // Bool creates a bool query with must/should/must_not/filter.
 func (qb *QueryBuilder) Bool(must, should, mustNot, filter []map[string]any) *QueryBuilder {
-	boolQuery := map[string]any{}
+	boolQuery := make(map[string]any)
 
 	if len(must) > 0 {
 		boolQuery["must"] = must
