@@ -72,13 +72,6 @@ func (s *Service[T]) Search(ctx context.Context, index string, query map[string]
 	return s.repo.Search(ctx, index, query, from, size, sort)
 }
 
-func (s *Service[T]) DeleteDocument(ctx context.Context, index, id string) error {
-	if index == "" || id == "" {
-		return errors.New("index and id required")
-	}
-	return s.repo.DeleteDocument(ctx, index, id)
-}
-
 // GetByID fetches a document by ID
 func (s *Service[T]) GetByID(ctx context.Context, index, id string) (*T, error) {
 	if index == "" || id == "" {
