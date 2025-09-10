@@ -1,4 +1,4 @@
-package elasticsearch
+package clients
 
 import (
 	"context"

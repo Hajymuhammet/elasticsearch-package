@@ -1,67 +1,104 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
-	esadapter "github.com/Hajymuhammet/elasticsearch-package/elasticsearch"
-	usecase "github.com/Hajymuhammet/elasticsearch-package/service"
+	esadapter "github.com/Hajymuhammet/elasticsearch-package/clients"
+	"github.com/Hajymuhammet/elasticsearch-package/filter"
+	"github.com/Hajymuhammet/elasticsearch-package/index"
+	"github.com/Hajymuhammet/elasticsearch-package/models"
 )
 
-type Stock struct {
-	ID     string  `json:"id" es:"type=keyword"`
-	Name   string  `json:"name" es:"type=text"`
-	Price  float64 `json:"price" es:"type=double"`
-	Amount int     `json:"amount" es:"type:long"`
-}
+const (
+	carIndexName = "cars"
+)
 
 func main() {
-	ctx := context.Background()
-
-	client, err := esadapter.NewClient(esadapter.ClientConfig{
-		Addresses: []string{"https://localhost:9200"}, // HTTPS ulanylýar
+	// Elasticsearch bilen baglanyşyk
+	es, err := esadapter.NewClient(esadapter.ClientConfig{
+		Addresses: []string{"http://10.192.1.127:9200"},
 		Username:  "elastic",
-		Password:  "+u--nSHZ+G3xfaYxGqzG",
+		Password:  "1Z*Ywl6qbw0PXqoeKzJ3",
 		Timeout:   10 * time.Second,
-		TLSConfig: &tls.Config{InsecureSkipVerify: true}, // self-signed sertifikat üçin
+		TLSConfig: &tls.Config{InsecureSkipVerify: true},
 	})
 	if err != nil {
 		log.Fatalf("new client: %v", err)
 	}
 
-	repo := esadapter.NewRepository[Stock](client)
-	svc := usecase.NewService[Stock](repo)
-
-	// Ensure index
-	mapping := svc.BuildMapping(Stock{})
-	if err := svc.EnsureIndex(ctx, "stocks", mapping); err != nil {
-		log.Fatalf("EnsureIndex failed: %v", err)
+	// Index bar bolsa geçmek, ýok bolsa döretmek
+	if err := index.EnsureCarIndex(es, carIndexName); err != nil {
+		log.Fatalf("failed to ensure index: %v", err)
 	}
 
-	// Index document
-	stock := Stock{ID: "1", Name: "Apple", Price: 100.5, Amount: 10}
-	if err := svc.Index(ctx, "stocks", stock.ID, stock); err != nil {
-		log.Fatalf("Index failed: %v", err)
+	// Test maglumat bilen Car dokumenti
+	car := &models.Car{
+		// Her dokument üçin unik ID
+		ID:             time.Now().UnixNano(),
+		UserId:         101,
+		UserName:       ptrString("John Doe"),
+		StockId:        ptrInt64(201),
+		StoreName:      ptrString("AutoStore"),
+		BrandId:        10,
+		BrandName:      ptrString("Toyota"),
+		ModelId:        1001,
+		ModelName:      ptrString("Highlender"),
+		Year:           2018,
+		Price:          15000,
+		Color:          "blue",
+		Vin:            ptrString("1HGBH41JXMN109186"),
+		Description:    ptrString("Well maintained car"),
+		CityId:         1,
+		CityNameTM:     ptrString("Ashgabat"),
+		CityNameEN:     ptrString("Ashgabat"),
+		CityNameRU:     ptrString("Ашхабад"),
+		Name:           ptrString("John Car"),
+		Mail:           ptrString("john@example.com"),
+		PhoneNumber:    "+99361234567",
+		IsComment:      true,
+		IsExchange:     false,
+		IsCredit:       true,
+		Images:         []string{"img1.jpg", "img2.jpg"},
+		Status:         "active",
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+		Mileage:        50000,
+		EngineCapacity: 1.8,
+		EngineType:     "Of",
+		BodyId:         1,
+		BodyNameTM:     ptrString("Sedan"),
+		BodyNameEN:     ptrString("Sedan"),
+		BodyNameRU:     ptrString("Седан"),
+		Transmission:   "Mehanic",
+		DriveType:      "AWD",
+		Options:        []int64{1, 2, 3},
 	}
-	fmt.Println("Indexed 1 document")
 
-	// Bulk
-	bulkDocs := []Stock{
-		{ID: "2", Name: "Google", Price: 2800.0, Amount: 2},
-		{ID: "3", Name: "Amazon", Price: 3500.0, Amount: 1},
+	// Dokumenti index-e goşmak
+	if err := index.IndexCar(es, carIndexName, car); err != nil {
+		fmt.Println("index error:", err)
+	} else {
+		fmt.Println("Document indexed successfully")
 	}
-	if err := svc.BulkIndex(ctx, "stocks", bulkDocs, func(s Stock) string { return s.ID }); err != nil {
-		log.Fatalf("BulkIndex failed: %v", err)
-	}
-	fmt.Println("Bulk indexed")
 
-	// Search
-	results, total, err := svc.Search(ctx, "stocks", map[string]any{"match_all": map[string]any{}}, 0, 10, nil)
+	// Filter bilen sorag
+	carFilter := &filter.CarFilter{
+		Color: []string{"blue"},
+	}
+
+	cars, err := filter.SearchCars(es, carIndexName, carFilter)
 	if err != nil {
-		log.Fatalf("Search failed: %v", err)
+		fmt.Println("search error:", err)
+	} else {
+		fmt.Printf("Found %d cars:\n", len(cars))
+		data, _ := json.MarshalIndent(cars, "", "  ")
+		fmt.Println(string(data))
 	}
-	fmt.Printf("total=%d results=%v\n", total, results)
 }
+
+func ptrString(s string) *string { return &s }
+func ptrInt64(i int64) *int64    { return &i }
