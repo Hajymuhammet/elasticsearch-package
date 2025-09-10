@@ -18,7 +18,6 @@ const (
 )
 
 func main() {
-	// Elasticsearch bilen baglanyşyk
 	es, err := esadapter.NewClient(esadapter.ClientConfig{
 		Addresses: []string{"http://10.192.1.127:9200"},
 		Username:  "elastic",
@@ -30,14 +29,11 @@ func main() {
 		log.Fatalf("new client: %v", err)
 	}
 
-	// Index bar bolsa geçmek, ýok bolsa döretmek
 	if err := index.EnsureCarIndex(es, carIndexName); err != nil {
 		log.Fatalf("failed to ensure index: %v", err)
 	}
 
-	// Test maglumat bilen Car dokumenti
 	car := &models.Car{
-		// Her dokument üçin unik ID
 		ID:             time.Now().UnixNano(),
 		UserId:         101,
 		UserName:       ptrString("John Doe"),
@@ -78,7 +74,6 @@ func main() {
 		Options:        []int64{1, 2, 3},
 	}
 
-	// Dokumenti index-e goşmak
 	if err := index.IndexCar(es, carIndexName, car); err != nil {
 		fmt.Println("index error:", err)
 	} else {
