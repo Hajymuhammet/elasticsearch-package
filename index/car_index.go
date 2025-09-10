@@ -56,7 +56,6 @@ var carMapping = []byte(`
 }
 `)
 
-// CreateCarIndex göni index-i mapping bilen döretmek üçin
 func EnsureCarIndex(client *elasticsearch.Client, index string) error {
 	res, err := client.Indices.Exists([]string{index})
 	if err != nil {
@@ -87,7 +86,7 @@ func EnsureCarIndex(client *elasticsearch.Client, index string) error {
 	return nil
 }
 
-// IndexCar dokumenti goşmak
+// IndexCar
 func IndexCar(client *elasticsearch.Client, index string, car *models.Car) error {
 	data, err := json.Marshal(car)
 	if err != nil {
@@ -110,5 +109,102 @@ func IndexCar(client *elasticsearch.Client, index string, car *models.Car) error
 	}
 	fmt.Printf("Document ID=%d indexed successfully\n", car.ID)
 
+	return nil
+}
+
+func UpdateCar(client *elasticsearch.Client, index string, car *models.Car) error {
+	data, err := json.Marshal(map[string]interface{}{
+		"doc": car,
+	})
+
+	if err != nil {
+		fmt.Println("Error marshalling update car:", err)
+	}
+
+	res, err := client.Update(
+		index,
+		fmt.Sprintf("%d", car.ID),
+		bytes.NewReader(data),
+		client.Update.WithRefresh("wait_for"),
+	)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("error updating document ID=%d: %s", car.ID, res.String())
+	}
+	fmt.Printf("Document ID=%d updated successfully\n", car.ID)
+	return nil
+}
+
+func DeleteCar(client *elasticsearch.Client, index string, carID int64) error {
+	res, err := client.Delete(
+		index,
+		fmt.Sprintf("%d", carID),
+		client.Delete.WithRefresh("wait_for"),
+	)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("error deleting document ID=%d: %s", carID, res.String())
+	}
+
+	fmt.Printf("Document ID=%d deleted successfully\n", carID)
+
+	return nil
+}
+
+func BulkUpdateCars(client *elasticsearch.Client, index string, cars []models.Car) error {
+	var buf bytes.Buffer
+
+	for _, car := range cars {
+		meta := []byte(fmt.Sprintf(`{ "update": { "_index": "%s", "_id": "%d" } }%s`, index, car.ID, "\n"))
+		doc, err := json.Marshal(map[string]interface{}{"doc": car})
+		if err != nil {
+			return err
+		}
+		doc = append(doc, "\n"...)
+		buf.Write(meta)
+		buf.Write(doc)
+	}
+
+	res, err := client.Bulk(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("bulk update error: %s", res.String())
+	}
+
+	fmt.Println("Bulk update successful")
+	return nil
+}
+
+func BulkDeleteCars(client *elasticsearch.Client, index string, carIDs []int64) error {
+	var buf bytes.Buffer
+
+	for _, id := range carIDs {
+		meta := []byte(fmt.Sprintf(`{ "delete": { "_index": "%s", "_id": "%d" } }%s`, index, id, "\n"))
+		buf.Write(meta)
+	}
+
+	res, err := client.Bulk(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("bulk delete error: %s", res.String())
+	}
+
+	fmt.Println("Bulk delete successful")
 	return nil
 }
