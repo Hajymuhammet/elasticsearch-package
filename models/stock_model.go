@@ -21,7 +21,13 @@ type Stock struct {
 	RegionNameEN *string     `json:"region_name_en"`
 	RegionNameRU *string     `json:"region_name_ru"`
 	Status       string      `json:"status"`
+	Location     Location    `json:"location"`
 	Description  *string     `json:"description"`
 	CreatedAt    time.Time   `json:"created_at"`
 	UpdatedAt    time.Time   `json:"updated_at"`
+}
+
+type Location struct {
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
 }
