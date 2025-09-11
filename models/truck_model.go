@@ -55,7 +55,6 @@ type Truck struct {
 	IsCredit        bool        `json:"is_credit"`
 	Images          interface{} `json:"images"`
 	Status          string      `json:"status"`
-	Options         []int64     `json:"options"`
 	CreatedAt       time.Time   `json:"created_at"`
 	UpdatedAt       time.Time   `json:"updated_at"`
 }

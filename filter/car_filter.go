@@ -31,7 +31,6 @@ type CarFilter struct {
 	IsExchange        *bool
 	IsCredit          *bool
 	Status            []string
-	Options           []int64
 	CreatedAtMin      time.Time
 	CreatedAtMax      time.Time
 }
@@ -155,10 +154,6 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 	}
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
-	}
-
-	if len(filter.Options) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"options": filter.Options}})
 	}
 
 	if !filter.CreatedAtMin.IsZero() || !filter.CreatedAtMax.IsZero() {

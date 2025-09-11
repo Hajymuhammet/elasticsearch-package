@@ -40,5 +40,4 @@ type Car struct {
 	BodyNameRU     *string     `json:"body_name_ru"`
 	Transmission   string      `json:"transmission"`
 	DriveType      string      `json:"drive_type"`
-	Options        []int64     `json:"options"`
 }

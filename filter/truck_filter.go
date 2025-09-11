@@ -19,7 +19,6 @@ type TruckFilter struct {
 	Transmission       []string
 	DriveType          []string
 	CityID             []int64
-	Options            []int64
 	Color              []string
 	BodyType           []string
 	CabType            []string
@@ -146,9 +145,6 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	}
 	if len(filter.SuspensionType) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"suspension_type.keyword": filter.SuspensionType}})
-	}
-	if len(filter.Options) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"options": filter.Options}})
 	}
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
