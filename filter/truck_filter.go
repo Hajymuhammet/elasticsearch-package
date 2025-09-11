@@ -12,28 +12,47 @@ import (
 )
 
 type TruckFilter struct {
-	BrandID         []int64
-	ModelID         []int64
-	BodyID          []int64
-	YearMin         *int64
-	YearMax         *int64
-	PriceMin        *int64
-	PriceMax        *int64
-	CityID          []int64
-	EngineType      []string
-	Transmission    []string
-	DriveType       []string
-	LoadCapacityMin *float64
-	LoadCapacityMax *float64
-	MileageMin      *int64
-	MileageMax      *int64
-	EngineCapacity  *float64
-	Color           []string
-	IsExchange      *bool
-	IsCredit        *bool
-	Status          []string
-	CreatedAtMin    time.Time
-	CreatedAtMax    time.Time
+	BrandID            []int64
+	ModelID            []int64
+	BodyID             []int64
+	EngineType         []string
+	Transmission       []string
+	DriveType          []string
+	CityID             []int64
+	Options            []int64
+	Color              []string
+	BodyType           []string
+	CabType            []string
+	WheelFormula       []string
+	Brakes             []string
+	VehicleType        []string
+	ForkliftType       []string
+	CabSuspension      []string
+	SuspensionType     []string
+	Status             []string
+	YearMin            *int64
+	YearMax            *int64
+	PriceMin           *int64
+	PriceMax           *int64
+	MileageMin         *int64
+	MileageMax         *int64
+	SeatsMin           *int64
+	SeatsMax           *int64
+	AxlesMin           *int64
+	AxlesMax           *int64
+	EngineHoursMin     *int64
+	EngineHoursMax     *int64
+	LiftingCapacityMin *int64
+	LiftingCapacityMax *int64
+	LoadCapacityMin    *float64
+	LoadCapacityMax    *float64
+	EngineCapacityMin  *float64
+	EngineCapacityMax  *float64
+	Vin                *string
+	IsExchange         *bool
+	IsCredit           *bool
+	CreatedAtMin       time.Time
+	CreatedAtMax       time.Time
 }
 
 func SearchTrucks(client *elasticsearch.Client, index string, filter *TruckFilter) ([]models.Truck, error) {
@@ -82,6 +101,7 @@ func SearchTrucks(client *elasticsearch.Client, index string, filter *TruckFilte
 func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	must := []map[string]interface{}{}
 
+	// Terms filters
 	if len(filter.BrandID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"brand_id": filter.BrandID}})
 	}
@@ -90,29 +110,6 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	}
 	if len(filter.BodyID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"body_id": filter.BodyID}})
-	}
-	if filter.YearMin != nil || filter.YearMax != nil {
-		r := map[string]interface{}{}
-		if filter.YearMin != nil {
-			r["gte"] = *filter.YearMin
-		}
-		if filter.YearMax != nil {
-			r["lte"] = *filter.YearMax
-		}
-		must = append(must, map[string]interface{}{"range": map[string]interface{}{"year": r}})
-	}
-	if filter.PriceMin != nil || filter.PriceMax != nil {
-		r := map[string]interface{}{}
-		if filter.PriceMin != nil {
-			r["gte"] = *filter.PriceMin
-		}
-		if filter.PriceMax != nil {
-			r["lte"] = *filter.PriceMax
-		}
-		must = append(must, map[string]interface{}{"range": map[string]interface{}{"price": r}})
-	}
-	if len(filter.CityID) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"city_id": filter.CityID}})
 	}
 	if len(filter.EngineType) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"engine_type": filter.EngineType}})
@@ -123,31 +120,44 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	if len(filter.DriveType) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"drive_type": filter.DriveType}})
 	}
-	if filter.LoadCapacityMin != nil || filter.LoadCapacityMax != nil {
-		r := map[string]interface{}{}
-		if filter.LoadCapacityMin != nil {
-			r["gte"] = *filter.LoadCapacityMin
-		}
-		if filter.LoadCapacityMax != nil {
-			r["lte"] = *filter.LoadCapacityMax
-		}
-		must = append(must, map[string]interface{}{"range": map[string]interface{}{"load_capacity": r}})
-	}
-	if filter.MileageMin != nil || filter.MileageMax != nil {
-		r := map[string]interface{}{}
-		if filter.MileageMin != nil {
-			r["gte"] = *filter.MileageMin
-		}
-		if filter.MileageMax != nil {
-			r["lte"] = *filter.MileageMax
-		}
-		must = append(must, map[string]interface{}{"range": map[string]interface{}{"mileage": r}})
-	}
-	if filter.EngineCapacity != nil {
-		must = append(must, map[string]interface{}{"term": map[string]interface{}{"engine_capacity": *filter.EngineCapacity}})
-	}
 	if len(filter.Color) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"color": filter.Color}})
+	}
+	if len(filter.BodyType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"body_type.keyword": filter.BodyType}})
+	}
+	if len(filter.CabType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"cab_type.keyword": filter.CabType}})
+	}
+	if len(filter.WheelFormula) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"wheel_formula.keyword": filter.WheelFormula}})
+	}
+	if len(filter.Brakes) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"brakes.keyword": filter.Brakes}})
+	}
+	if len(filter.VehicleType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"vehicle_type.keyword": filter.VehicleType}})
+	}
+	if len(filter.ForkliftType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"forklift_type.keyword": filter.ForkliftType}})
+	}
+	if len(filter.CabSuspension) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"cab_suspension.keyword": filter.CabSuspension}})
+	}
+	if len(filter.SuspensionType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"suspension_type.keyword": filter.SuspensionType}})
+	}
+	if len(filter.Options) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"options": filter.Options}})
+	}
+	if len(filter.Status) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
+	}
+	if len(filter.CityID) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"city_id": filter.CityID}})
+	}
+	if filter.Vin != nil {
+		must = append(must, map[string]interface{}{"term": map[string]interface{}{"vin.keyword": *filter.Vin}})
 	}
 	if filter.IsExchange != nil {
 		must = append(must, map[string]interface{}{"term": map[string]interface{}{"is_exchange": *filter.IsExchange}})
@@ -155,9 +165,34 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	if filter.IsCredit != nil {
 		must = append(must, map[string]interface{}{"term": map[string]interface{}{"is_credit": *filter.IsCredit}})
 	}
-	if len(filter.Status) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
+
+	// Range filters
+	rangeFields := map[string][2]interface{}{
+		"year":             {*filter.YearMin, *filter.YearMax},
+		"price":            {*filter.PriceMin, *filter.PriceMax},
+		"mileage":          {*filter.MileageMin, *filter.MileageMax},
+		"seats":            {*filter.SeatsMin, *filter.SeatsMax},
+		"axles":            {*filter.AxlesMin, *filter.AxlesMax},
+		"engine_hours":     {*filter.EngineHoursMin, *filter.EngineHoursMax},
+		"lifting_capacity": {*filter.LiftingCapacityMin, *filter.LiftingCapacityMax},
+		"load_capacity":    {*filter.LoadCapacityMin, *filter.LoadCapacityMax},
+		"engine_capacity":  {*filter.EngineCapacityMin, *filter.EngineCapacityMax},
 	}
+
+	for field, bounds := range rangeFields {
+		r := map[string]interface{}{}
+		if bounds[0] != nil {
+			r["gte"] = bounds[0]
+		}
+		if bounds[1] != nil {
+			r["lte"] = bounds[1]
+		}
+		if len(r) > 0 {
+			must = append(must, map[string]interface{}{"range": map[string]interface{}{field: r}})
+		}
+	}
+
+	// CreatedAt range
 	if !filter.CreatedAtMin.IsZero() || !filter.CreatedAtMax.IsZero() {
 		r := map[string]interface{}{}
 		if !filter.CreatedAtMin.IsZero() {

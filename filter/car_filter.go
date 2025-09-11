@@ -12,26 +12,28 @@ import (
 )
 
 type CarFilter struct {
-	BrandID        []int64
-	ModelID        []int64
-	YearMin        *int64
-	YearMax        *int64
-	PriceMin       *int64
-	PriceMax       *int64
-	CityID         []int64
-	EngineType     []string
-	Transmission   []string
-	DriveType      []string
-	BodyID         []int64
-	MileageMin     *int64
-	MileageMax     *int64
-	EngineCapacity *float64
-	Color          []string
-	IsExchange     *bool
-	IsCredit       *bool
-	Status         []string
-	CreatedAtMin   time.Time
-	CreatedAtMax   time.Time
+	BrandID           []int64
+	ModelID           []int64
+	YearMin           *int64
+	YearMax           *int64
+	PriceMin          *int64
+	PriceMax          *int64
+	CityID            []int64
+	EngineType        []string
+	Transmission      []string
+	DriveType         []string
+	BodyID            []int64
+	MileageMin        *int64
+	MileageMax        *int64
+	EngineCapacityMin *float64
+	EngineCapacityMax *float64
+	Color             []string
+	IsExchange        *bool
+	IsCredit          *bool
+	Status            []string
+	Options           []int64
+	CreatedAtMin      time.Time
+	CreatedAtMax      time.Time
 }
 
 func SearchCars(client *elasticsearch.Client, index string, filter *CarFilter) ([]models.Car, error) {
@@ -130,8 +132,17 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 		}
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"mileage": r}})
 	}
-	if filter.EngineCapacity != nil {
-		must = append(must, map[string]interface{}{"term": map[string]interface{}{"engine_capacity": *filter.EngineCapacity}})
+	if filter.EngineCapacityMin != nil || filter.EngineCapacityMax != nil {
+		r := map[string]interface{}{}
+		if filter.EngineCapacityMin != nil {
+			r["gte"] = *filter.EngineCapacityMin
+		}
+		if filter.EngineCapacityMax != nil {
+			r["lte"] = *filter.EngineCapacityMax
+		}
+		must = append(must, map[string]interface{}{
+			"range": map[string]interface{}{"engine_capacity": r},
+		})
 	}
 	if len(filter.Color) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"color.keyword": filter.Color}})
@@ -145,6 +156,11 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
 	}
+
+	if len(filter.Options) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"options": filter.Options}})
+	}
+
 	if !filter.CreatedAtMin.IsZero() || !filter.CreatedAtMax.IsZero() {
 		r := map[string]interface{}{}
 		if !filter.CreatedAtMin.IsZero() {

@@ -12,24 +12,29 @@ import (
 )
 
 type MotoFilter struct {
-	BrandID         []int64
-	ModelID         []int64
-	BodyID          []int64
-	YearMin         *int32
-	YearMax         *int32
-	PriceMin        *int64
-	PriceMax        *int64
-	CityID          []int64
-	EngineType      []string
-	TypeMotorcycles []string
-	MileageMin      *int64
-	MileageMax      *int64
-	Color           []string
-	IsExchange      *bool
-	IsCredit        *bool
-	Status          []string
-	CreatedAtMin    time.Time
-	CreatedAtMax    time.Time
+	BrandID             []int64
+	ModelID             []int64
+	BodyID              []int64
+	YearMin             *int32
+	YearMax             *int32
+	PriceMin            *int64
+	PriceMax            *int64
+	CityID              []int64
+	EngineType          []string
+	TypeMotorcycles     []string
+	MileageMin          *int64
+	MileageMax          *int64
+	VolumeMin           *int64
+	VolumeMax           *int64
+	Color               []string
+	IsExchange          *bool
+	IsCredit            *bool
+	Status              []string
+	NumberOfClockCycles []int32
+	AirType             []string
+	Options             []int64
+	CreatedAtMin        time.Time
+	CreatedAtMax        time.Time
 }
 
 func SearchMotos(client *elasticsearch.Client, index string, filter *MotoFilter) ([]models.Moto, error) {
@@ -126,6 +131,20 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 		}
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"mileage": r}})
 	}
+
+	if filter.VolumeMin != nil || filter.VolumeMax != nil {
+		r := map[string]interface{}{}
+		if filter.VolumeMin != nil {
+			r["gte"] = *filter.VolumeMin
+		}
+		if filter.VolumeMax != nil {
+			r["lte"] = *filter.VolumeMax
+		}
+		must = append(must, map[string]interface{}{
+			"range": map[string]interface{}{"volume": r},
+		})
+	}
+
 	if len(filter.Color) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"color": filter.Color}})
 	}
@@ -138,6 +157,23 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
 	}
+
+	if len(filter.NumberOfClockCycles) > 0 {
+		must = append(must, map[string]interface{}{
+			"terms": map[string]interface{}{"number_of_clock_cycles": filter.NumberOfClockCycles},
+		})
+	}
+
+	if len(filter.AirType) > 0 {
+		must = append(must, map[string]interface{}{
+			"terms": map[string]interface{}{"air_type.keyword": filter.AirType},
+		})
+	}
+
+	if len(filter.Options) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"options": filter.Options}})
+	}
+
 	if !filter.CreatedAtMin.IsZero() || !filter.CreatedAtMax.IsZero() {
 		r := map[string]interface{}{}
 		if !filter.CreatedAtMin.IsZero() {
