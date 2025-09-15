@@ -49,8 +49,7 @@ var carMapping = []byte(`
       "body_name_en": { "type": "keyword" },
       "body_name_ru": { "type": "keyword" },
       "transmission": { "type": "keyword" },
-      "drive_type": { "type": "keyword" },
-      "options": { "type": "long" }
+      "drive_type": { "type": "keyword" }
     }
   }
 }

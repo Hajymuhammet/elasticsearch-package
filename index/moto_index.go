@@ -44,7 +44,6 @@ var motoMapping = []byte(`
       "name": { "type": "keyword" },
       "mail": { "type": "keyword" },
       "phone_number": { "type": "keyword" },
-      "options": { "type": "long" },
       "is_comment": { "type": "boolean" },
       "is_exchange": { "type": "boolean" },
       "is_credit": { "type": "boolean" },
