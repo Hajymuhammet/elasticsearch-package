@@ -26,7 +26,7 @@ var truckMapping = []byte(`
       "brand_name": { "type": "keyword" },
       "model_id": { "type": "long" },
       "model_name": { "type": "keyword" },
-      "load_capacity": { "type": "double" },
+      "load_capacity": { "type": "keyword" },
       "price": { "type": "long" },
       "body_type": { "type": "keyword" },
       "drive_type": { "type": "keyword" },

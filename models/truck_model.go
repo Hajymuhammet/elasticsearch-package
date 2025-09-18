@@ -16,7 +16,7 @@ type Truck struct {
 	BrandName       *string     `json:"brand_name"`
 	ModelId         int64       `json:"model_id"`
 	ModelName       *string     `json:"model_name"`
-	LoadCapacity    *float64    `json:"load_capacity"`
+	LoadCapacity    *string     `json:"load_capacity"`
 	Price           int64       `json:"price"`
 	BodyType        *string     `json:"body_type"`
 	DriveType       *string     `json:"drive_type"`

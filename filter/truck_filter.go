@@ -15,6 +15,7 @@ type TruckFilter struct {
 	BrandID            []int64
 	ModelID            []int64
 	BodyID             []int64
+	LoadCapacity       []string // new
 	EngineType         []string
 	Transmission       []string
 	DriveType          []string
@@ -29,6 +30,11 @@ type TruckFilter struct {
 	CabSuspension      []string
 	SuspensionType     []string
 	Status             []string
+	Chassis            []string // new
+	BusType            []string // new
+	LoaderType         []string // new
+	ExcavatorType      []string // new
+	BulldozerType      []string // new
 	YearMin            *int64
 	YearMax            *int64
 	PriceMin           *int64
@@ -43,8 +49,6 @@ type TruckFilter struct {
 	EngineHoursMax     *int64
 	LiftingCapacityMin *int64
 	LiftingCapacityMax *int64
-	LoadCapacityMin    *float64
-	LoadCapacityMax    *float64
 	EngineCapacityMin  *float64
 	EngineCapacityMax  *float64
 	Vin                *string
@@ -171,7 +175,6 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 		"axles":            {toIface(filter.AxlesMin), toIface(filter.AxlesMax)},
 		"engine_hours":     {toIface(filter.EngineHoursMin), toIface(filter.EngineHoursMax)},
 		"lifting_capacity": {toIface(filter.LiftingCapacityMin), toIface(filter.LiftingCapacityMax)},
-		"load_capacity":    {toIface(filter.LoadCapacityMin), toIface(filter.LoadCapacityMax)},
 		"engine_capacity":  {toIface(filter.EngineCapacityMin), toIface(filter.EngineCapacityMax)},
 	}
 
