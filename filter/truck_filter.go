@@ -162,26 +162,26 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 		must = append(must, map[string]interface{}{"term": map[string]interface{}{"is_credit": *filter.IsCredit}})
 	}
 
-	// Range filters
-	rangeFields := map[string][2]interface{}{
-		"year":             {*filter.YearMin, *filter.YearMax},
-		"price":            {*filter.PriceMin, *filter.PriceMax},
-		"mileage":          {*filter.MileageMin, *filter.MileageMax},
-		"seats":            {*filter.SeatsMin, *filter.SeatsMax},
-		"axles":            {*filter.AxlesMin, *filter.AxlesMax},
-		"engine_hours":     {*filter.EngineHoursMin, *filter.EngineHoursMax},
-		"lifting_capacity": {*filter.LiftingCapacityMin, *filter.LiftingCapacityMax},
-		"load_capacity":    {*filter.LoadCapacityMin, *filter.LoadCapacityMax},
-		"engine_capacity":  {*filter.EngineCapacityMin, *filter.EngineCapacityMax},
+	// Range filters (safe nil checks)
+	rangeFields := map[string][2]*interface{}{
+		"year":             {toIface(filter.YearMin), toIface(filter.YearMax)},
+		"price":            {toIface(filter.PriceMin), toIface(filter.PriceMax)},
+		"mileage":          {toIface(filter.MileageMin), toIface(filter.MileageMax)},
+		"seats":            {toIface(filter.SeatsMin), toIface(filter.SeatsMax)},
+		"axles":            {toIface(filter.AxlesMin), toIface(filter.AxlesMax)},
+		"engine_hours":     {toIface(filter.EngineHoursMin), toIface(filter.EngineHoursMax)},
+		"lifting_capacity": {toIface(filter.LiftingCapacityMin), toIface(filter.LiftingCapacityMax)},
+		"load_capacity":    {toIface(filter.LoadCapacityMin), toIface(filter.LoadCapacityMax)},
+		"engine_capacity":  {toIface(filter.EngineCapacityMin), toIface(filter.EngineCapacityMax)},
 	}
 
 	for field, bounds := range rangeFields {
 		r := map[string]interface{}{}
 		if bounds[0] != nil {
-			r["gte"] = bounds[0]
+			r["gte"] = *bounds[0]
 		}
 		if bounds[1] != nil {
-			r["lte"] = bounds[1]
+			r["lte"] = *bounds[1]
 		}
 		if len(r) > 0 {
 			must = append(must, map[string]interface{}{"range": map[string]interface{}{field: r}})
@@ -205,4 +205,13 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 			"bool": map[string]interface{}{"must": must},
 		},
 	}
+}
+
+// helper: safely convert typed pointers to *interface{}
+func toIface[T any](v *T) *interface{} {
+	if v == nil {
+		return nil
+	}
+	var i interface{} = *v
+	return &i
 }
