@@ -30,7 +30,7 @@ type MotoFilter struct {
 	IsExchange          *bool
 	IsCredit            *bool
 	Status              []string
-	NumberOfClockCycles []int32
+	NumberOfClockCycles []int64 // new
 	AirType             []string
 	Options             []int64
 	CreatedAtMin        time.Time

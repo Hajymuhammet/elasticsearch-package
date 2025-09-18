@@ -21,7 +21,7 @@ type Moto struct {
 	Price               int64       `json:"price"`
 	Volume              int64       `json:"volume"`
 	EngineType          *string     `json:"engine_type"`
-	NumberOfClockCycles *int32      `json:"number_of_clock_cycles"`
+	NumberOfClockCycles *int64      `json:"number_of_clock_cycles"`
 	Mileage             *int64      `json:"mileage"`
 	AirType             *string     `json:"air_type"`
 	Color               string      `json:"color"`
