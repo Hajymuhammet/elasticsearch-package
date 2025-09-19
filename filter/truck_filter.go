@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v8"
 	"time"
 
 	"github.com/Hajymuhammet/elasticsearch-package/models"
-	"github.com/elastic/go-elasticsearch/v8"
 )
 
 type TruckFilter struct {
@@ -32,7 +32,6 @@ type TruckFilter struct {
 	Status             []string
 	Chassis            []string // new
 	BusType            []string // new
-	LoaderType         []string // new
 	ExcavatorType      []string // new
 	BulldozerType      []string // new
 	YearMin            *int64
@@ -114,6 +113,9 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	if len(filter.BodyID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"body_id": filter.BodyID}})
 	}
+	if len(filter.LoadCapacity) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"load_capacity": filter.LoadCapacity}})
+	}
 	if len(filter.EngineType) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"engine_type": filter.EngineType}})
 	}
@@ -152,6 +154,18 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	}
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
+	}
+	if len(filter.Chassis) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"chassis.keyword": filter.Chassis}})
+	}
+	if len(filter.BusType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"bus_type.keyword": filter.BusType}})
+	}
+	if len(filter.ExcavatorType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"excavator_type.keyword": filter.ExcavatorType}})
+	}
+	if len(filter.BulldozerType) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"bulldozer_type.keyword": filter.BulldozerType}})
 	}
 	if len(filter.CityID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"city_id": filter.CityID}})
