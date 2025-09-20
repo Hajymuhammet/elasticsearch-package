@@ -19,7 +19,6 @@ func ptrString(s string) *string { return &s }
 func ptrInt64(i int64) *int64    { return &i }
 
 func main() {
-	// Elasticsearch client
 	es, err := esadapter.NewClient(esadapter.ClientConfig{
 		Addresses: []string{"http://10.192.1.127:9200"},
 		Username:  "elastic",
@@ -31,7 +30,6 @@ func main() {
 		log.Fatalf("new client: %v", err)
 	}
 
-	// Indeksi barla ýa-da döret
 	if err := index.EnsureCarIndex(es, carIndexName); err != nil {
 		log.Fatalf("failed to ensure index: %v", err)
 	}
@@ -54,7 +52,6 @@ func main() {
 		{ID: 15, UserId: 1, UserName: ptrString(""), StockId: ptrInt64(3), StoreName: ptrString("AsgabatStore"), BrandId: 5, BrandName: ptrString("dededed"), ModelId: 3, ModelName: ptrString("TEST"), Year: 2016, Price: 11000, Color: "blue", PhoneNumber: "+99360000015", Status: "accepted", CityId: 2, CityNameTM: ptrString("bayramaly"), CityNameEN: ptrString("bayramaly"), CityNameRU: ptrString("bayramaly"), CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 
-	// Indeksle we terminala çykar
 	for _, car := range cars {
 		if err := index.IndexCar(es, carIndexName, &car); err != nil {
 			fmt.Println("index error:", err)
