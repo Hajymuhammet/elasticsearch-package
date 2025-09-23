@@ -81,6 +81,7 @@ func EnsureTruckIndex(client *elasticsearch.Client, indexName string) error {
 	defer res.Body.Close()
 
 	if res.StatusCode == 200 {
+		fmt.Println("Using existing index:", indexName)
 		return nil
 	}
 
