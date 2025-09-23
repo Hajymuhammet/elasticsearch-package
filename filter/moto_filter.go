@@ -15,6 +15,7 @@ type MotoFilter struct {
 	BrandID             []int64
 	ModelID             []int64
 	BodyID              []int64
+	StockID             []int64
 	YearMin             *int32
 	YearMax             *int32
 	PriceMin            *int64
@@ -91,6 +92,9 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 	}
 	if len(filter.BodyID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"body_id": filter.BodyID}})
+	}
+	if len(filter.StockID) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"stock_id": filter.StockID}})
 	}
 	if filter.YearMin != nil || filter.YearMax != nil {
 		r := map[string]interface{}{}

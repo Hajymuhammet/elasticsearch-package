@@ -5,8 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v8"
 	"time"
+
+	"github.com/elastic/go-elasticsearch/v8"
 
 	"github.com/Hajymuhammet/elasticsearch-package/models"
 )
@@ -15,6 +16,7 @@ type TruckFilter struct {
 	BrandID            []int64
 	ModelID            []int64
 	BodyID             []int64
+	StockID            []int64
 	LoadCapacity       []string // new
 	EngineType         []string
 	Transmission       []string
@@ -112,6 +114,9 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	}
 	if len(filter.BodyID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"body_id": filter.BodyID}})
+	}
+	if len(filter.StockID) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"stock_id": filter.StockID}})
 	}
 	if len(filter.LoadCapacity) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"load_capacity": filter.LoadCapacity}})

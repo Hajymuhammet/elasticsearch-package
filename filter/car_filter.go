@@ -14,6 +14,7 @@ import (
 type CarFilter struct {
 	BrandID           []int64
 	ModelID           []int64
+	StockID           []int64
 	YearMin           *int64
 	YearMax           *int64
 	PriceMin          *int64
@@ -85,6 +86,9 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 	}
 	if len(filter.ModelID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"model_id": filter.ModelID}})
+	}
+	if len(filter.StockID) > 0 {
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"stock_id": filter.StockID}})
 	}
 	if filter.YearMin != nil || filter.YearMax != nil {
 		r := map[string]interface{}{}
