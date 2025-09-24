@@ -31,6 +31,8 @@ type CarFilter struct {
 	Color             []string
 	IsExchange        *bool
 	IsCredit          *bool
+	PriceOrder        *string // "asc" veya "desc"
+	YearOrder         *string // "asc" veya "desc"
 	Status            []string
 	CreatedAtMin      time.Time
 	CreatedAtMax      time.Time
@@ -143,9 +145,7 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 		if filter.EngineCapacityMax != nil {
 			r["lte"] = *filter.EngineCapacityMax
 		}
-		must = append(must, map[string]interface{}{
-			"range": map[string]interface{}{"engine_capacity": r},
-		})
+		must = append(must, map[string]interface{}{"range": map[string]interface{}{"engine_capacity": r}})
 	}
 	if len(filter.Color) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"color.keyword": filter.Color}})
@@ -159,7 +159,6 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
 	}
-
 	if !filter.CreatedAtMin.IsZero() || !filter.CreatedAtMax.IsZero() {
 		r := map[string]interface{}{}
 		if !filter.CreatedAtMin.IsZero() {
@@ -171,11 +170,25 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"created_at": r}})
 	}
 
-	return map[string]interface{}{
+	// Sort hissəsi
+	sort := []map[string]interface{}{}
+	if filter.PriceOrder != nil {
+		sort = append(sort, map[string]interface{}{"price": map[string]interface{}{"order": *filter.PriceOrder}})
+	}
+	if filter.YearOrder != nil {
+		sort = append(sort, map[string]interface{}{"year": map[string]interface{}{"order": *filter.YearOrder}})
+	}
+
+	result := map[string]interface{}{
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
 				"must": must,
 			},
 		},
 	}
+	if len(sort) > 0 {
+		result["sort"] = sort
+	}
+
+	return result
 }

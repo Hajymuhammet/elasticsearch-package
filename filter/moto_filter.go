@@ -31,9 +31,11 @@ type MotoFilter struct {
 	IsExchange          *bool
 	IsCredit            *bool
 	Status              []string
-	NumberOfClockCycles []int64 // new
+	NumberOfClockCycles []int64
 	AirType             []string
 	Options             []int64
+	PriceOrder          *string // "asc" / "desc"
+	YearOrder           *string // "asc" / "desc"
 	CreatedAtMin        time.Time
 	CreatedAtMax        time.Time
 }
@@ -135,7 +137,6 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 		}
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"mileage": r}})
 	}
-
 	if filter.VolumeMin != nil || filter.VolumeMax != nil {
 		r := map[string]interface{}{}
 		if filter.VolumeMin != nil {
@@ -144,11 +145,8 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 		if filter.VolumeMax != nil {
 			r["lte"] = *filter.VolumeMax
 		}
-		must = append(must, map[string]interface{}{
-			"range": map[string]interface{}{"volume": r},
-		})
+		must = append(must, map[string]interface{}{"range": map[string]interface{}{"volume": r}})
 	}
-
 	if len(filter.Color) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"color": filter.Color}})
 	}
@@ -161,23 +159,15 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 	if len(filter.Status) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
 	}
-
 	if len(filter.NumberOfClockCycles) > 0 {
-		must = append(must, map[string]interface{}{
-			"terms": map[string]interface{}{"number_of_clock_cycles": filter.NumberOfClockCycles},
-		})
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"number_of_clock_cycles": filter.NumberOfClockCycles}})
 	}
-
 	if len(filter.AirType) > 0 {
-		must = append(must, map[string]interface{}{
-			"terms": map[string]interface{}{"air_type.keyword": filter.AirType},
-		})
+		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"air_type.keyword": filter.AirType}})
 	}
-
 	if len(filter.Options) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"options": filter.Options}})
 	}
-
 	if !filter.CreatedAtMin.IsZero() || !filter.CreatedAtMax.IsZero() {
 		r := map[string]interface{}{}
 		if !filter.CreatedAtMin.IsZero() {
@@ -189,9 +179,23 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"created_at": r}})
 	}
 
+	// Sorting
+	sort := []map[string]interface{}{}
+	if filter.PriceOrder != nil {
+		sort = append(sort, map[string]interface{}{"price": map[string]interface{}{"order": *filter.PriceOrder}})
+	}
+	if filter.YearOrder != nil {
+		sort = append(sort, map[string]interface{}{"year": map[string]interface{}{"order": *filter.YearOrder}})
+	}
+	if len(sort) == 0 {
+		// default sort by created_at desc
+		sort = append(sort, map[string]interface{}{"created_at": map[string]interface{}{"order": "desc"}})
+	}
+
 	return map[string]interface{}{
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{"must": must},
 		},
+		"sort": sort,
 	}
 }

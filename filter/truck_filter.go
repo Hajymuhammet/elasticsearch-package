@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v8"
-
 	"github.com/Hajymuhammet/elasticsearch-package/models"
+	"github.com/elastic/go-elasticsearch/v8"
 )
 
 type TruckFilter struct {
@@ -17,7 +16,7 @@ type TruckFilter struct {
 	ModelID            []int64
 	BodyID             []int64
 	StockID            []int64
-	LoadCapacity       []string // new
+	LoadCapacity       []string
 	EngineType         []string
 	Transmission       []string
 	DriveType          []string
@@ -32,10 +31,10 @@ type TruckFilter struct {
 	CabSuspension      []string
 	SuspensionType     []string
 	Status             []string
-	Chassis            []string // new
-	BusType            []string // new
-	ExcavatorType      []string // new
-	BulldozerType      []string // new
+	Chassis            []string
+	BusType            []string
+	ExcavatorType      []string
+	BulldozerType      []string
 	YearMin            *int64
 	YearMax            *int64
 	PriceMin           *int64
@@ -55,6 +54,8 @@ type TruckFilter struct {
 	Vin                *string
 	IsExchange         *bool
 	IsCredit           *bool
+	PriceOrder         *string // "asc" veya "desc"
+	YearOrder          *string // "asc" veya "desc"
 	CreatedAtMin       time.Time
 	CreatedAtMax       time.Time
 }
@@ -106,6 +107,33 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	must := []map[string]interface{}{}
 
 	// Terms filters
+	termsFilters := map[string][]string{
+		"load_capacity":           filter.LoadCapacity,
+		"engine_type":             filter.EngineType,
+		"transmission":            filter.Transmission,
+		"drive_type":              filter.DriveType,
+		"color":                   filter.Color,
+		"body_type.keyword":       filter.BodyType,
+		"cab_type.keyword":        filter.CabType,
+		"wheel_formula.keyword":   filter.WheelFormula,
+		"brakes.keyword":          filter.Brakes,
+		"vehicle_type.keyword":    filter.VehicleType,
+		"forklift_type.keyword":   filter.ForkliftType,
+		"cab_suspension.keyword":  filter.CabSuspension,
+		"suspension_type.keyword": filter.SuspensionType,
+		"status.keyword":          filter.Status,
+		"chassis.keyword":         filter.Chassis,
+		"bus_type.keyword":        filter.BusType,
+		"excavator_type.keyword":  filter.ExcavatorType,
+		"bulldozer_type.keyword":  filter.BulldozerType,
+	}
+
+	for field, values := range termsFilters {
+		if len(values) > 0 {
+			must = append(must, map[string]interface{}{"terms": map[string]interface{}{field: values}})
+		}
+	}
+
 	if len(filter.BrandID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"brand_id": filter.BrandID}})
 	}
@@ -117,60 +145,6 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 	}
 	if len(filter.StockID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"stock_id": filter.StockID}})
-	}
-	if len(filter.LoadCapacity) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"load_capacity": filter.LoadCapacity}})
-	}
-	if len(filter.EngineType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"engine_type": filter.EngineType}})
-	}
-	if len(filter.Transmission) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"transmission": filter.Transmission}})
-	}
-	if len(filter.DriveType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"drive_type": filter.DriveType}})
-	}
-	if len(filter.Color) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"color": filter.Color}})
-	}
-	if len(filter.BodyType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"body_type.keyword": filter.BodyType}})
-	}
-	if len(filter.CabType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"cab_type.keyword": filter.CabType}})
-	}
-	if len(filter.WheelFormula) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"wheel_formula.keyword": filter.WheelFormula}})
-	}
-	if len(filter.Brakes) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"brakes.keyword": filter.Brakes}})
-	}
-	if len(filter.VehicleType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"vehicle_type.keyword": filter.VehicleType}})
-	}
-	if len(filter.ForkliftType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"forklift_type.keyword": filter.ForkliftType}})
-	}
-	if len(filter.CabSuspension) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"cab_suspension.keyword": filter.CabSuspension}})
-	}
-	if len(filter.SuspensionType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"suspension_type.keyword": filter.SuspensionType}})
-	}
-	if len(filter.Status) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"status.keyword": filter.Status}})
-	}
-	if len(filter.Chassis) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"chassis.keyword": filter.Chassis}})
-	}
-	if len(filter.BusType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"bus_type.keyword": filter.BusType}})
-	}
-	if len(filter.ExcavatorType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"excavator_type.keyword": filter.ExcavatorType}})
-	}
-	if len(filter.BulldozerType) > 0 {
-		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"bulldozer_type.keyword": filter.BulldozerType}})
 	}
 	if len(filter.CityID) > 0 {
 		must = append(must, map[string]interface{}{"terms": map[string]interface{}{"city_id": filter.CityID}})
@@ -185,7 +159,7 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 		must = append(must, map[string]interface{}{"term": map[string]interface{}{"is_credit": *filter.IsCredit}})
 	}
 
-	// Range filters (safe nil checks)
+	// Range filters
 	rangeFields := map[string][2]*interface{}{
 		"year":             {toIface(filter.YearMin), toIface(filter.YearMax)},
 		"price":            {toIface(filter.PriceMin), toIface(filter.PriceMax)},
@@ -222,11 +196,25 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"created_at": r}})
 	}
 
-	return map[string]interface{}{
+	// Sort
+	sort := []map[string]interface{}{}
+	if filter.PriceOrder != nil {
+		sort = append(sort, map[string]interface{}{"price": map[string]interface{}{"order": *filter.PriceOrder}})
+	}
+	if filter.YearOrder != nil {
+		sort = append(sort, map[string]interface{}{"year": map[string]interface{}{"order": *filter.YearOrder}})
+	}
+
+	result := map[string]interface{}{
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{"must": must},
 		},
 	}
+	if len(sort) > 0 {
+		result["sort"] = sort
+	}
+
+	return result
 }
 
 // helper: safely convert typed pointers to *interface{}
