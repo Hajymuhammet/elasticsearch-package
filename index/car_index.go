@@ -207,3 +207,35 @@ func BulkDeleteCars(client *elasticsearch.Client, index string, carIDs []int64) 
 	fmt.Println("Bulk delete successful")
 	return nil
 }
+
+func DeleteFeedsByUserID(client *elasticsearch.Client, index string, userID int64) error {
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"term": map[string]interface{}{
+				"user_id": userID,
+			},
+		},
+	}
+
+	data, err := json.Marshal(query)
+	if err != nil {
+		return fmt.Errorf("Error marshalling query: %w", err)
+	}
+
+	res, err := client.DeleteByQuery(
+		[]string{index},
+		bytes.NewReader(data),
+		client.DeleteByQuery.WithRefresh(true),
+	)
+	if err != nil {
+		return fmt.Errorf("error deleting by user_id=%d: %v", userID, err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("delete by query failed for user_id=%d: %s", userID, res.String())
+	}
+
+	fmt.Printf("All documents with user_id=%d deleted successfully from index=%s\n", userID, index)
+	return nil
+}
