@@ -111,7 +111,10 @@ func IndexMoto(client *elasticsearch.Client, index string, moto *models.Moto) er
 }
 
 func UpdateMoto(client *elasticsearch.Client, index string, moto *models.Moto) error {
-	data, err := json.Marshal(map[string]interface{}{"doc": moto})
+	data, err := json.Marshal(map[string]interface{}{
+		"doc":           moto,
+		"doc_as_upsert": true,
+	})
 	if err != nil {
 		return err
 	}

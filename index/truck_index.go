@@ -129,7 +129,10 @@ func IndexTruck(client *elasticsearch.Client, indexName string, truck *models.Tr
 }
 
 func UpdateTruck(client *elasticsearch.Client, index string, truck *models.Truck) error {
-	data, err := json.Marshal(map[string]interface{}{"doc": truck})
+	data, err := json.Marshal(map[string]interface{}{
+		"doc":           truck,
+		"doc_as_upsert": true,
+	})
 	if err != nil {
 		return err
 	}
