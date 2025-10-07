@@ -58,6 +58,8 @@ type TruckFilter struct {
 	YearOrder          *string // "asc" veya "desc"
 	CreatedAtMin       time.Time
 	CreatedAtMax       time.Time
+	IsCompany          *bool
+	IsPrivate          *bool
 }
 
 func SearchTrucks(client *elasticsearch.Client, index string, filter *TruckFilter) ([]models.Truck, error) {
@@ -194,6 +196,35 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 			r["lte"] = filter.CreatedAtMax.Format(time.RFC3339)
 		}
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"created_at": r}})
+	}
+
+	if filter.IsCompany != nil && filter.IsPrivate != nil {
+		if !*filter.IsCompany && !*filter.IsPrivate {
+		} else if *filter.IsCompany {
+			must = append(must, map[string]interface{}{
+				"bool": map[string]interface{}{
+					"must_not": map[string]interface{}{
+						"term": map[string]interface{}{"stock_id": 0},
+					},
+				},
+			})
+		} else if *filter.IsPrivate {
+			must = append(must, map[string]interface{}{
+				"term": map[string]interface{}{"stock_id": 0},
+			})
+		}
+	} else if filter.IsCompany != nil && *filter.IsCompany {
+		must = append(must, map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must_not": map[string]interface{}{
+					"term": map[string]interface{}{"stock_id": 0},
+				},
+			},
+		})
+	} else if filter.IsPrivate != nil && *filter.IsPrivate {
+		must = append(must, map[string]interface{}{
+			"term": map[string]interface{}{"stock_id": 0},
+		})
 	}
 
 	// Sort

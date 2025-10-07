@@ -36,6 +36,8 @@ type CarFilter struct {
 	Status            []string
 	CreatedAtMin      time.Time
 	CreatedAtMax      time.Time
+	IsCompany         *bool
+	IsPrivate         *bool
 }
 
 func SearchCars(client *elasticsearch.Client, index string, filter *CarFilter) ([]models.Car, error) {
@@ -170,7 +172,36 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 		must = append(must, map[string]interface{}{"range": map[string]interface{}{"created_at": r}})
 	}
 
-	// Sort hissəsi
+	if filter.IsCompany != nil && filter.IsPrivate != nil {
+		if !*filter.IsCompany && !*filter.IsPrivate {
+		} else if *filter.IsCompany {
+			must = append(must, map[string]interface{}{
+				"bool": map[string]interface{}{
+					"must_not": map[string]interface{}{
+						"term": map[string]interface{}{"stock_id": 0},
+					},
+				},
+			})
+		} else if *filter.IsPrivate {
+			must = append(must, map[string]interface{}{
+				"term": map[string]interface{}{"stock_id": 0},
+			})
+		}
+	} else if filter.IsCompany != nil && *filter.IsCompany {
+		must = append(must, map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must_not": map[string]interface{}{
+					"term": map[string]interface{}{"stock_id": 0},
+				},
+			},
+		})
+	} else if filter.IsPrivate != nil && *filter.IsPrivate {
+		must = append(must, map[string]interface{}{
+			"term": map[string]interface{}{"stock_id": 0},
+		})
+	}
+
+	// Sort
 	sort := []map[string]interface{}{}
 	if filter.PriceOrder != nil {
 		sort = append(sort, map[string]interface{}{"price": map[string]interface{}{"order": *filter.PriceOrder}})
