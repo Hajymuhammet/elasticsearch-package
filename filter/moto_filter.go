@@ -36,6 +36,8 @@ type MotoFilter struct {
 	Options             []int64
 	PriceOrder          *string // "asc" / "desc"
 	YearOrder           *string // "asc" / "desc"
+	Limit               *int
+	Page                *int
 	CreatedAtMin        time.Time
 	CreatedAtMax        time.Time
 	IsCompany           *bool
@@ -222,6 +224,17 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 		})
 	}
 
+	// Limit and Page
+	size := 10
+	if filter.Limit != nil && *filter.Limit > 0 {
+		size = *filter.Limit
+	}
+
+	from := 0
+	if filter.Page != nil && *filter.Page > 0 {
+		from = (*filter.Page - 1) * size
+	}
+
 	// Sorting
 	sort := []map[string]interface{}{}
 	if filter.PriceOrder != nil {
@@ -239,6 +252,8 @@ func buildMotoESQuery(filter *MotoFilter) map[string]interface{} {
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{"must": must},
 		},
+		"size": size,
+		"from": from,
 		"sort": sort,
 	}
 }

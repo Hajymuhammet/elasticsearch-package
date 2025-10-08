@@ -58,6 +58,8 @@ type TruckFilter struct {
 	YearOrder          *string // "asc" veya "desc"
 	CreatedAtMin       time.Time
 	CreatedAtMax       time.Time
+	Limit              *int
+	Page               *int
 	IsCompany          *bool
 	IsPrivate          *bool
 }
@@ -248,10 +250,23 @@ func buildTruckESQuery(filter *TruckFilter) map[string]interface{} {
 		sort = append(sort, map[string]interface{}{"year": map[string]interface{}{"order": *filter.YearOrder}})
 	}
 
+	// Limit and Page
+	size := 10
+	if filter.Limit != nil && *filter.Limit > 0 {
+		size = *filter.Limit
+	}
+
+	from := 0
+	if filter.Page != nil && *filter.Page > 0 {
+		from = (*filter.Page - 1) * size
+	}
+
 	result := map[string]interface{}{
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{"must": must},
 		},
+		"size": size,
+		"from": from,
 	}
 	if len(sort) > 0 {
 		result["sort"] = sort
