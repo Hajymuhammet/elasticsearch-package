@@ -173,31 +173,43 @@ func buildESQuery(filter *CarFilter) map[string]interface{} {
 	}
 
 	if filter.IsCompany != nil && filter.IsPrivate != nil {
-		if !*filter.IsCompany && !*filter.IsPrivate {
+		if *filter.IsCompany && *filter.IsPrivate {
 		} else if *filter.IsCompany {
 			must = append(must, map[string]interface{}{
 				"bool": map[string]interface{}{
-					"must_not": map[string]interface{}{
-						"term": map[string]interface{}{"stock_id": 0},
+					"should": []map[string]interface{}{
+						{"range": map[string]interface{}{"stock_id": map[string]interface{}{"gt": 0}}},
+						{"exists": map[string]interface{}{"field": "stock_id"}},
 					},
 				},
 			})
 		} else if *filter.IsPrivate {
 			must = append(must, map[string]interface{}{
-				"term": map[string]interface{}{"stock_id": 0},
+				"bool": map[string]interface{}{
+					"should": []map[string]interface{}{
+						{"term": map[string]interface{}{"stock_id": 0}},
+						{"bool": map[string]interface{}{"must_not": map[string]interface{}{"exists": map[string]interface{}{"field": "stock_id"}}}},
+					},
+				},
 			})
 		}
 	} else if filter.IsCompany != nil && *filter.IsCompany {
 		must = append(must, map[string]interface{}{
 			"bool": map[string]interface{}{
-				"must_not": map[string]interface{}{
-					"term": map[string]interface{}{"stock_id": 0},
+				"should": []map[string]interface{}{
+					{"range": map[string]interface{}{"stock_id": map[string]interface{}{"gt": 0}}},
+					{"exists": map[string]interface{}{"field": "stock_id"}},
 				},
 			},
 		})
 	} else if filter.IsPrivate != nil && *filter.IsPrivate {
 		must = append(must, map[string]interface{}{
-			"term": map[string]interface{}{"stock_id": 0},
+			"bool": map[string]interface{}{
+				"should": []map[string]interface{}{
+					{"term": map[string]interface{}{"stock_id": 0}},
+					{"bool": map[string]interface{}{"must_not": map[string]interface{}{"exists": map[string]interface{}{"field": "stock_id"}}}},
+				},
+			},
 		})
 	}
 
